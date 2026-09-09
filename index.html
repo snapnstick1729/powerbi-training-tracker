@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Power BI Training Tracker</title>
+<style>
+  :root{
+    --ink:#1f2a24;
+    --paper:#f6f4ed;
+    --line:#d8d2c2;
+    --moss:#3f6d54;
+    --moss-dark:#2c4d3b;
+    --clay:#a8623f;
+    --muted:#7a7566;
+    --card:#fffdf8;
+    --blue:#4a6485;
+    --plum:#7a5270;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+    background:var(--paper);
+    color:var(--ink);
+    padding:32px 20px 80px;
+  }
+  .wrap{max-width:900px;margin:0 auto;}
+  header{margin-bottom:28px;}
+  .kicker{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;letter-spacing:.02em;color:var(--muted);margin:0 0 6px;}
+  h1{font-size:30px;margin:0 0 4px;font-weight:600;line-height:1.15;}
+  .sub{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px;color:var(--muted);margin:0;}
+  .progress-block{margin:22px 0 30px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+  .progress-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+  .progress-num{font-size:26px;font-weight:700;color:var(--moss-dark);font-family:Georgia,serif;}
+  .progress-label{font-size:13px;color:var(--muted);}
+  .bar-track{height:8px;background:var(--line);border-radius:5px;overflow:hidden;}
+  .bar-fill{height:100%;background:var(--moss);width:0%;transition:width .4s ease;}
+  .week{margin-bottom:6px;}
+  .week-head{display:flex;align-items:center;gap:10px;padding:14px 4px 8px;cursor:pointer;user-select:none;border-bottom:1px solid var(--line);}
+  .week-title{font-size:15px;font-weight:600;flex:1;}
+  .week-meta{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:12px;color:var(--muted);}
+  .chev{font-size:12px;color:var(--muted);transition:transform .2s ease;width:14px;text-align:center;}
+  .week.collapsed .chev{transform:rotate(-90deg);}
+  .week.collapsed .days{display:none;}
+  .day{border-bottom:1px dashed var(--line);}
+  .day:last-child{border-bottom:none;}
+  .day-row{display:flex;gap:12px;align-items:flex-start;padding:12px 4px;cursor:pointer;}
+  .day-num{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:11px;color:var(--muted);min-width:38px;padding-top:3px;}
+  .day-body{flex:1;}
+  .day-title-row{display:flex;align-items:baseline;gap:8px;}
+  .day-title{font-size:15.5px;margin:0 0 6px;line-height:1.3;flex:1;}
+  .day-title.done{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line);}
+  .day-title.new-topic{color:var(--clay);}
+  .day-chev{font-size:11px;color:var(--muted);transition:transform .2s ease;padding-top:2px;}
+  .day.open .day-chev{transform:rotate(180deg);}
+  .checks{display:flex;gap:16px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:12.5px;}
+  label.chk{display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--ink);}
+  label.chk input{width:15px;height:15px;accent-color:var(--moss);cursor:pointer;}
+  label.chk.homework input{accent-color:var(--clay);}
+  .day-detail{display:none;padding:0 4px 20px 50px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13.5px;line-height:1.6;}
+  .day.open .day-detail{display:block;}
+  .section{margin-bottom:14px;}
+  .section:last-child{margin-bottom:0;}
+  .section-label{font-weight:600;font-size:12px;display:block;margin-bottom:5px;}
+  .section-label.cover{color:var(--moss-dark);}
+  .section-label.live{color:var(--blue);}
+  .section-label.hw{color:var(--clay);}
+  .section-label.terms{color:var(--muted);}
+  .section-label.summary{color:#5b6f8a;}
+  .section-label.check{color:var(--plum);}
+  ul.bullets{margin:0;padding-left:18px;}
+  ul.bullets li{margin-bottom:6px;}
+  ul.bullets li:last-child{margin-bottom:0;}
+  ol.steps{margin:0;padding-left:18px;}
+  ol.steps li{margin-bottom:6px;}
+  ol.steps li:last-child{margin-bottom:0;}
+  .hw-time{color:var(--muted);font-size:12px;margin-top:6px;}
+  .terms-row{display:flex;flex-wrap:wrap;gap:6px;}
+  .term-chip{background:var(--card);border:1px solid var(--line);border-radius:5px;padding:4px 9px;font-size:12px;}
+  .term-chip b{color:var(--ink);font-weight:600;}
+  .plain-text{color:var(--ink);}
+  .divider{border:none;border-top:1px solid var(--line);margin:14px 0;}
+  .visual-section{margin-bottom:16px;overflow-x:auto;}
+  .new-badge{display:inline-block;font-size:10px;background:var(--clay);color:#fffdf8;padding:2px 7px;border-radius:9px;margin-left:6px;vertical-align:middle;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+  footer{margin-top:36px;display:flex;justify-content:space-between;align-items:center;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:12px;color:var(--muted);}
+  button#reset{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:12px;background:none;border:1px solid var(--line);color:var(--muted);padding:6px 12px;border-radius:6px;cursor:pointer;}
+  button#reset:hover{border-color:var(--clay);color:var(--clay);}
+  .save-note{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:11px;color:var(--muted);opacity:0;transition:opacity .3s ease;}
+  .save-note.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kicker">Coaching tracker &mdash; v7, professional review edition</p>
+    <h1>36-Day Power BI Training</h1>
+    <p class="sub">Click a day for the full lesson. Days marked <span class="new-badge">NEW</span> were added after a professional curriculum review to close analyst-skill gaps.</p>
+  </header>
+  <div class="progress-block">
+    <div class="progress-row">
+      <span class="progress-num" id="progressNum">0 / 72</span>
+      <span class="progress-label" id="progressLabel">0% complete</span>
+    </div>
+    <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
+  </div>
+  <div id="weeks"></div>
+  <footer>
+    <span class="save-note" id="saveNote">Saved</span>
+    <button id="reset">Reset all progress</button>
+  </footer>
+</div>
+
+<script>
+const PLAN = [
+{ title:"Foundations (fully conceptual, no tools yet)", days:[
+
+{ n:1, title:"Data & Data Types",
+  teach:["What \u201cdata\u201d means: any fact recorded so it can be looked up or analyzed later \u2014 a name, an amount, a date, a status.","Structured data fits into rows and columns \u2014 every record has the same fields, e.g. a UPI transaction log: Date, Amount, Payee, Status.","Unstructured data doesn't fit a table cleanly \u2014 photos, voice notes, free-text chat messages, scanned PDFs.","Core data types analysts deal with daily: Text (names, categories), Number (amounts, counts), Date/Time (when something happened), Boolean (true/false, success/failed).","Why the type matters: it decides what operations are valid \u2014 you can sum numbers but not text; dates sort chronologically, but the same value stored as plain text sorts alphabetically instead ('10' before '2')."],
+  live:["Open a UPI transaction history or bank statement together.","Go column by column: Date \u2192 Date/Time, Amount \u2192 Number, Payee/Merchant \u2192 Text, Status (Success/Failed) \u2192 Boolean-like category.","Show a column where Amount was typed as \u201c\u20b9500\u201d (with the symbol) \u2014 try to SUM it, show it fails or returns 0.","Fix it: strip the symbol, change the column to Number \u2014 now SUM works."],
+  hw:{steps:["Open their own bank statement or Swiggy/Zomato order history export.","For every column, write: column name \u2192 data type (Text/Number/Date/Boolean).","Flag any column where the type looks wrong (e.g. a date stored as text, an amount with a currency symbol)."], time:"~35\u201340 min"},
+  terms:[["Structured data","Data organized into consistent rows and columns"],["Unstructured data","Data with no fixed row/column structure"],["Data type","The category of value a column holds, which decides what operations are valid"]],
+  summary:"Data types determine what operations are even possible \u2014 the wrong type silently breaks totals, sorting, and filtering later on.",
+  check:["What data type would you use for a UPI transaction amount, and why not text?","Give one example of structured vs unstructured data from your own life.","Why can't you sum a column if it's stored as text?","How would you fix a date column that's been imported as plain text?"] },
+
+{ n:2, title:"Storage: Files vs Databases vs Warehouses",
+  visual: `<svg viewBox="0 0 660 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;">
+<rect x="10" y="15" width="130" height="60" rx="8" fill="#fffdf8" stroke="#3f6d54" stroke-width="1.5"/>
+<text x="75" y="50" text-anchor="middle" font-size="12" fill="#1f2a24">Booking App</text>
+<line x1="140" y1="45" x2="172" y2="45" stroke="#7a7566" stroke-width="1.5"/>
+<polygon points="172,40 180,45 172,50" fill="#7a7566"/>
+<rect x="182" y="15" width="130" height="60" rx="8" fill="#fffdf8" stroke="#3f6d54" stroke-width="1.5"/>
+<text x="247" y="50" text-anchor="middle" font-size="12" fill="#1f2a24">Database</text>
+<line x1="312" y1="45" x2="344" y2="45" stroke="#7a7566" stroke-width="1.5"/>
+<polygon points="344,40 352,45 344,50" fill="#7a7566"/>
+<rect x="354" y="15" width="130" height="60" rx="8" fill="#fffdf8" stroke="#a8623f" stroke-width="1.5"/>
+<text x="419" y="50" text-anchor="middle" font-size="12" fill="#1f2a24">Warehouse</text>
+<line x1="484" y1="45" x2="516" y2="45" stroke="#7a7566" stroke-width="1.5"/>
+<polygon points="516,40 524,45 516,50" fill="#7a7566"/>
+<rect x="526" y="15" width="124" height="60" rx="8" fill="#fffdf8" stroke="#4a6485" stroke-width="1.5"/>
+<text x="588" y="50" text-anchor="middle" font-size="12" fill="#1f2a24">Report</text>
+</svg>`,
+  teach:["A flat file (CSV/Excel) stores data as one plain document \u2014 simple, but no relationships or rules, and it breaks down with multiple editors or large volume.","A database is software built to store, protect, and quickly retrieve structured data \u2014 it enforces rules (like \u201cCustomerID must exist before an order references it\u201d) and lets many people/apps read and write at once.","A data warehouse is a specialized database optimized for reporting and analysis rather than day-to-day transactions \u2014 it usually pulls in cleaned data from multiple source systems.","Scale problem: an app like IRCTC can't run off an Excel file \u2014 millions of simultaneous bookings need a database engineered for concurrent access.","The general shape most companies' data follows: raw transactional data starts in a database, then gets copied/transformed into a warehouse for reporting."],
+  live:["Ask: \u201cWhen you book an IRCTC ticket, where does that data actually go?\u201d","Trace it together: booking app \u2192 underlying database (stores the live booking) \u2192 later, a copy flows into a warehouse \u2192 that powers reports like 'monthly bookings by route.'","Contrast with: \u201cWhat if IRCTC just kept one big Excel file?\u201d \u2014 discuss what breaks (simultaneous edits, file size, no rule enforcement like seat limits)."],
+  hw:{steps:["Think of one shared spreadsheet they've used \u2014 family budget, wedding planning, a work tracker.","Write 3 sentences describing a time multiple versions (v1, v2, v2_final) caused confusion or lost data."], time:"~35 min"},
+  terms:[["Flat file","A single plain document like a CSV or Excel file"],["Database","Software built to store and retrieve structured data with rules and concurrent access"],["Data warehouse","A database optimized for reporting rather than daily transactions"]],
+  summary:"Where data lives depends on scale \u2014 a flat file is fine for one person, but shared/large-scale data needs a real database or warehouse behind it.",
+  check:["Why doesn't \u201cjust email me the spreadsheet\u201d scale for something like IRCTC?","What's the difference between a file and a database, in one sentence?","Name one storage-related problem you've personally run into.","Why does a warehouse usually sit \u201cafter\u201d a database in the pipeline, not instead of it?"] },
+
+{ n:3, title:"Databases & Tables (RDBMS)",
+  teach:["RDBMS = Relational Database Management System \u2014 a database made of multiple related tables (MySQL, PostgreSQL, SQL Server, Oracle are all RDBMS engines).","A table represents one \u201centity\u201d \u2014 one type of real-world thing: Customers, Orders, Products. Each entity gets its own table.","Rows = individual records (one specific customer, one specific order). Columns = attributes describing that record (name, email, order date, amount).","Why not one giant table? Storing the customer's name on every order row duplicates it hundreds of times \u2014 wastes space, and a name change means updating everywhere instead of once.","This splitting principle (informally, \u201cnormalization\u201d): each fact should live in exactly one place."],
+  live:["Take a Swiggy-style scenario: customers order food repeatedly.","Show a \u201cbad\u201d single table: every row has CustomerName, CustomerPhone, OrderID, ItemOrdered, Amount \u2014 point out the same CustomerName repeating.","Split it into two tables: Customers (CustomerID, Name, Phone) and Orders (OrderID, CustomerID, ItemOrdered, Amount) \u2014 customer info now lives in exactly one place."],
+  hw:{steps:["Sketch 3 tables for a kirana store going digital: Customers, Orders, Items.","For each table, list column names and their data type (ties back to Day 1 \u2014 e.g. Price \u2192 Number, OrderDate \u2192 Date)."], time:"~40 min"},
+  terms:[["RDBMS","A database system organized as multiple related tables"],["Entity","One type of real-world thing represented by a table"],["Normalization (informal)","Splitting data so each fact lives in exactly one place"]],
+  summary:"A database splits data into one table per entity so information isn't repeated or duplicated across rows.",
+  check:["Why do we split Customers and Orders into two tables instead of one big sheet?","What would go wrong if we stored the customer's name on every single order row?","Name two columns you'd expect in an \u201cItems\u201d table for a kirana store.","What does 'entity' mean in the context of a table?"] },
+
+{ n:4, title:"Schema, Keys & Relationships",
+  visual: `<svg viewBox="0 0 520 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:440px;height:auto;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;">
+<rect x="10" y="10" width="200" height="112" rx="6" fill="#fffdf8" stroke="#3f6d54" stroke-width="1.5"/>
+<rect x="10" y="10" width="200" height="28" rx="6" fill="#3f6d54"/>
+<text x="110" y="29" text-anchor="middle" font-size="12" fill="#fffdf8" font-weight="600">Customers</text>
+<text x="20" y="56" font-size="11" fill="#1f2a24" font-weight="600">CustomerID (PK)</text>
+<text x="20" y="76" font-size="11" fill="#1f2a24">Name</text>
+<text x="20" y="96" font-size="11" fill="#1f2a24">Phone</text>
+<rect x="300" y="90" width="210" height="112" rx="6" fill="#fffdf8" stroke="#a8623f" stroke-width="1.5"/>
+<rect x="300" y="90" width="210" height="28" rx="6" fill="#a8623f"/>
+<text x="405" y="109" text-anchor="middle" font-size="12" fill="#fffdf8" font-weight="600">Orders</text>
+<text x="310" y="136" font-size="11" fill="#1f2a24" font-weight="600">OrderID (PK)</text>
+<text x="310" y="156" font-size="11" fill="#1f2a24" font-weight="600">CustomerID (FK)</text>
+<text x="310" y="176" font-size="11" fill="#1f2a24">Item, Amount</text>
+<path d="M 210 60 C 260 60, 260 150, 300 150" fill="none" stroke="#7a7566" stroke-width="1.5"/>
+<polygon points="300,145 308,150 300,155" fill="#7a7566"/>
+<text x="255" y="45" text-anchor="middle" font-size="10.5" fill="#7a7566">one customer</text>
+<text x="255" y="200" text-anchor="middle" font-size="10.5" fill="#7a7566">many orders</text>
+</svg>`,
+  teach:["Schema = the overall blueprint of a database: which tables exist, what columns each has, and how they connect.","Primary key (PK): a column (or combination) that uniquely identifies each row \u2014 no two rows share the same PK, and it can't be blank. E.g. CustomerID in Customers.","Foreign key (FK): a column in one table that refers to the primary key of another table \u2014 this is what creates a relationship. E.g. Orders.CustomerID refers to Customers.CustomerID.","One-to-many relationship: the most common pattern \u2014 one customer can have many orders, but each order belongs to exactly one customer.","Why this matters later: every SQL JOIN and every Power BI relationship is built on exactly this PK\u2194FK link."],
+  live:["Draw two boxes: Customers (CustomerID PK, Name, Phone) and Orders (OrderID PK, CustomerID FK, Item, Amount).","Draw an arrow from Orders.CustomerID to Customers.CustomerID.","Ask: \u201cIf CustomerID 105 has 4 rows in Orders, what does that tell us?\u201d (This customer placed 4 orders \u2014 one-to-many.)"],
+  hw:{steps:["Go back to their Day 3 kirana-store tables (Customers, Orders, Items).","Mark the primary key in each table.","Mark the foreign key(s) that link the tables together."], time:"~40 min"},
+  terms:[["Schema","The blueprint of tables, columns, and connections in a database"],["Primary key","A column uniquely identifying each row in a table"],["Foreign key","A column referencing another table's primary key"]],
+  summary:"Primary keys uniquely identify a row; foreign keys reference that key from another table, which is what makes a relationship possible.",
+  check:["What's the difference between a primary key and a foreign key?","In the Swiggy example, which table \u201cowns\u201d CustomerID as its primary key?","Why does a relationship need a shared key between two tables?","What would break if two rows in Customers had the same CustomerID?"] },
+
+{ n:5, title:"Views + On-Prem vs Cloud + Week 1 Recap",
+  teach:["A view is a saved SQL query that behaves like a virtual table \u2014 it stores no data itself, just re-runs the underlying query every time you open it, always showing current data.","Why use a view: if you often need \u201ccustomers who joined this year,\u201d save that logic once as a view instead of rewriting the query every time.","On-premises (\u201con-prem\u201d): the company owns and physically houses the servers \u2014 full control, but also full responsibility for maintenance, security patches, backups, and power/cooling.","Cloud: a provider (Azure, AWS, GCP) owns the hardware; the company rents capacity \u2014 less maintenance burden and easier scaling, but less physical control and an ongoing subscription cost.","Real trade-off: banks historically kept core systems on-prem for tight control and regulatory reasons; UPI apps and newer fintechs build cloud-first to scale quickly without owning data centers."],
+  live:["Compare two systems side by side: \u201ca bank's core banking system running in a server room the bank owns\u201d vs \u201ca UPI app's backend running on a cloud provider.\u201d","For each, ask: who patches the software? Who's responsible if the server room floods? How fast can it add capacity during a big sale/event?"],
+  hw:{steps:["Write an 8\u201310 question open-book quiz (you write it) covering Days 1\u20134: data types, storage types, tables/RDBMS, schema/keys.","No new material \u2014 pure consolidation."], time:"~35 min"},
+  terms:[["View","A saved query that behaves like a virtual table"],["On-premises","Infrastructure owned and hosted by the company itself"],["Cloud","Infrastructure rented from a provider like Azure/AWS/GCP"]],
+  summary:"A view is a reusable saved query; on-prem means you own and maintain the hardware, cloud means a provider does it for you, at a cost/control trade-off.",
+  check:["What's one advantage and one disadvantage of on-prem vs cloud?","Why might a bank be slower to move to the cloud than a startup?","What is a view, in your own words?","Why does a view always show current data even though it's 'saved'?"] },
+
+]},
+{ title:"Requirements, KPIs & First SQL + Power BI", days:[
+
+{ n:6, title:"Business Requirements & KPI Literacy", isNew:true,
+  teach:["Before writing any query or building any visual, a good analyst clarifies the actual question being asked \u2014 \u201cshow me our performance\u201d is not yet a data question.","Turn a vague ask into a specific one: who is asking, what decision will this inform, over what time period, broken down by what (region/product/customer segment)?","KPI (Key Performance Indicator): a specific, measurable metric tied to a business goal \u2014 e.g. Monthly Revenue, Customer Retention Rate, Order Conversion Rate, Average Order Value.","Common KPI categories: Growth (revenue, new customers), Efficiency (cost per order, delivery time), Retention (repeat customer rate, churn), Satisfaction (ratings, complaints).","A good habit: before opening any tool, write the question in one sentence and name the metric(s) that would answer it \u2014 this becomes the report's title and headline number."],
+  live:["Take a vague stakeholder request: \u201cCan you show me how the business is doing?\u201d","Work through clarifying questions together: doing well at what \u2014 sales? satisfaction? Compared to when \u2014 last month, last year? For whom \u2014 all customers or a segment?","Turn it into a specific, buildable question: \u201cWhat was our month-over-month revenue growth for the last 6 months, broken down by region?\u201d","Identify which KPI(s) this maps to (Monthly Revenue, Growth Rate)."],
+  hw:{steps:["Take 2 vague requests (made up, or real ones from work/family life \u2014 e.g. \u201chow's our Swiggy spending looking?\u201d).","For each, write the specific question it should become, and name the KPI(s) involved."], time:"~35\u201340 min"},
+  terms:[["Requirements gathering","Clarifying what question a report actually needs to answer"],["KPI","A specific, measurable metric tied to a business goal"]],
+  summary:"A good dashboard starts with a specific question and a named metric, not with opening Power BI \u2014 clarifying who's asking, what decision it informs, and over what period prevents wasted building time.",
+  check:["Why is \u201cshow me how we're doing\u201d not yet a buildable data question?","What's a KPI, in your own words?","Name one KPI each for growth, retention, and satisfaction.","What questions would you ask a stakeholder before building their dashboard?"] },
+
+{ n:7, title:"First SQL Query (SELECT / WHERE / ORDER BY)",
+  teach:["SQL (Structured Query Language) is how you \u201cask\u201d a database for data \u2014 it's declarative: you describe what you want, not how to get it.","SELECT <columns> FROM <table>: the minimum query \u2014 picks which columns you want from which table.","WHERE <condition>: filters rows before they're returned \u2014 e.g. WHERE population > 100000000.","ORDER BY <column> [ASC/DESC]: sorts the result \u2014 ASC (default) is smallest/earliest first, DESC is largest/latest first.","Execution order (conceptually): the database filters (WHERE) before it sorts (ORDER BY), even though SELECT is written first in the syntax."],
+  live:["On SQLZoo's World dataset, write: SELECT name, population FROM world WHERE population > 100000000 ORDER BY population DESC;","Run it \u2014 India and China should be near the top.","Modify together: change the threshold, flip ASC/DESC, add a second condition (e.g. AND continent = 'Asia')."],
+  hw:{steps:["SQLZoo Tutorial 0 (SELECT basics).","SQLZoo Tutorial 1 (SELECT from World), first 10 questions."], time:"~45 min"},
+  terms:[["SELECT","Chooses which columns to return"],["WHERE","Filters which rows are returned"],["ORDER BY","Sorts the result set"]],
+  summary:"SELECT/WHERE/ORDER BY let you pull, filter, and sort exactly the data you need instead of scanning everything by hand.",
+  check:["Explain in words what this query does: SELECT name FROM world WHERE population > 100000000 ORDER BY population.","What's the difference between what WHERE does and what ORDER BY does?","Why would you filter before you sort?","How would you get the smallest countries first instead of the largest?"] },
+
+{ n:8, title:"Power BI First Look + Get Data",
+  teach:["Power BI Desktop has three main views: Report view (build visuals), Data view (see raw imported tables, like a spreadsheet), Model view (see/edit relationships between tables).","\u201cGet Data\u201d is the universal entry point for bringing any source into Power BI \u2014 Excel/CSV, SQL Server, Databricks, web pages, folders, and dozens more connectors.","Importing via Get Data copies the data into Power BI's own internal storage by default \u2014 this is Import mode (the alternative, DirectQuery, comes later).","The ribbon tabs (Home, Insert, Modeling, View) are where most actions live \u2014 worth a quick tour so the interface isn't intimidating."],
+  live:["Open Power BI Desktop \u2192 File \u2192 Get Data \u2192 \u201cTry a sample dataset\u201d \u2192 load the Financial Sample.","Click through Report view (finished visuals), Data view (raw table), Model view (only one table here, so no relationships yet).","Now do a real import: Get Data \u2192 Text/CSV \u2192 pick a small CSV \u2192 Load."],
+  hw:{steps:["Import one CSV of their own (bank statement, Swiggy orders, or any downloaded export) into a new .pbix.","Explore it in Data view only \u2014 no building yet."], time:"~40 min"},
+  terms:[["Report view","Where visuals and dashboards are built"],["Data view","Raw table view of imported data"],["Model view","Where relationships between tables are managed"]],
+  summary:"Power BI has three core views \u2014 Report, Data, Model \u2014 and Get Data is the single entry point for bringing any source into the tool.",
+  check:["What's the difference between Report view and Data view?","What does \u201cGet Data\u201d actually do?","Name one source type you saw in the Get Data list.","What happens to the data by default when you import it \u2014 does Power BI copy it or just look at it live?"] },
+
+{ n:9, title:"SQL Aggregations (COUNT, SUM, AVG, GROUP BY)",
+  teach:["Aggregation functions collapse many rows into one summary value: COUNT (how many rows), SUM (total), AVG (average), MIN/MAX (smallest/largest).","Without GROUP BY, an aggregation summarizes the entire result set into one row (e.g. total population of every country combined).","GROUP BY <column> buckets rows sharing the same value in that column, then runs the aggregation separately per bucket \u2014 e.g. GROUP BY continent gives one total per continent.","Common mistake: selecting a column that's neither aggregated nor in the GROUP BY \u2014 the database won't know which row's value to show, and errors out."],
+  live:["SELECT continent, SUM(population) FROM world GROUP BY continent ORDER BY SUM(population) DESC; \u2014 discuss what each bucket represents.","SELECT continent, AVG(gdp) FROM world WHERE continent = 'Asia' GROUP BY continent; \u2014 compare India's GDP to this average separately.","Write 2\u20133 more together, swapping the aggregation function each time."],
+  hw:{steps:["SQLZoo Tutorial 5 (SUM and COUNT), first 8 questions."], time:"~45 min"},
+  terms:[["COUNT","Counts the number of rows"],["SUM / AVG","Totals or averages a numeric column"],["GROUP BY","Buckets rows before aggregating"]],
+  summary:"Aggregation functions collapse many rows into one summary number; GROUP BY decides how the rows get bucketed before that happens.",
+  check:["What does GROUP BY actually do to your rows before SUM or COUNT runs?","What's the difference between COUNT and SUM?","Which clause groups the rows in \u201caverage GDP by continent\u201d?","Why would SELECT country, SUM(population) FROM world GROUP BY continent; give an error?"] },
+
+{ n:10, title:"SQL Joins + Power BI Relationships (paired)",
+  visual: `<svg viewBox="0 0 560 250" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:480px;height:auto;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;">
+<text x="140" y="20" text-anchor="middle" font-size="12" font-weight="600" fill="#1f2a24">INNER JOIN</text>
+<circle cx="105" cy="110" r="65" fill="#fffdf8" stroke="#3f6d54" stroke-width="1.5"/>
+<circle cx="175" cy="110" r="65" fill="#fffdf8" stroke="#a8623f" stroke-width="1.5"/>
+<path d="M 140 55 A 65 65 0 0 1 140 165 A 65 65 0 0 1 140 55 Z" fill="#c9b98a" opacity="0.55"/>
+<text x="75" y="115" text-anchor="middle" font-size="11" fill="#1f2a24">Customers</text>
+<text x="205" y="115" text-anchor="middle" font-size="11" fill="#1f2a24">Orders</text>
+<text x="140" y="225" text-anchor="middle" font-size="10.5" fill="#7a7566">only matching rows in both tables</text>
+<text x="420" y="20" text-anchor="middle" font-size="12" font-weight="600" fill="#1f2a24">LEFT JOIN</text>
+<circle cx="385" cy="110" r="65" fill="#c9b98a" opacity="0.55" stroke="#3f6d54" stroke-width="1.5"/>
+<circle cx="455" cy="110" r="65" fill="#fffdf8" stroke="#a8623f" stroke-width="1.5"/>
+<path d="M 420 55 A 65 65 0 0 1 420 165 A 65 65 0 0 1 420 55 Z" fill="#c9b98a" opacity="0.55"/>
+<text x="355" y="115" text-anchor="middle" font-size="11" fill="#1f2a24">Customers</text>
+<text x="485" y="115" text-anchor="middle" font-size="11" fill="#1f2a24">Orders</text>
+<text x="420" y="225" text-anchor="middle" font-size="10.5" fill="#7a7566">all customers, matched orders if any</text>
+</svg>`,
+  teach:["A JOIN combines rows from two tables based on a matching key \u2014 the most common type, INNER JOIN, only returns rows with a match in both tables.","Syntax pattern: SELECT ... FROM TableA INNER JOIN TableB ON TableA.Key = TableB.Key.","LEFT JOIN keeps all rows from the left table even without a match on the right \u2014 useful for \u201cshow me all customers, even ones with zero orders.\u201d","In Power BI, you don't write JOIN syntax \u2014 you drag a line between two tables in Model view connecting their key columns; this does the same job internally whenever a visual pulls from both tables.","Cardinality: Power BI relationships are typically \u201cone-to-many,\u201d matching the PK\u2194FK pattern from Day 4."],
+  live:["SQL: SELECT Orders.OrderID, Customers.Name, Orders.Amount FROM Orders INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID; (adapted to SQLZoo's join tutorial tables).","Power BI: import a second small table related to their Day 8 CSV, go to Model view, drag CustomerID in one table onto CustomerID in the other to create the relationship.","Point out: \u201cThis line you just drew is doing the same job as the JOIN we wrote in SQL.\u201d"],
+  hw:{steps:["SQLZoo JOIN tutorial, first half.","Connect two tables in their .pbix if not finished live."], time:"~50 min"},
+  terms:[["INNER JOIN","Returns only rows with a match in both tables"],["LEFT JOIN","Keeps all left-table rows even without a match"],["Cardinality","The one-to-many (or other) shape of a relationship"]],
+  summary:"A join and a Power BI relationship do the same job \u2014 stitching two tables together using a shared key \u2014 just in two different tools.",
+  check:["Why do we need a shared key to join two tables?","What's the Power BI equivalent of a SQL JOIN?","What would happen if a CustomerID in Orders didn't match any CustomerID in Customers?","When would you use LEFT JOIN instead of INNER JOIN?"] },
+
+{ n:11, title:"Week 2 Recap: Mini SQL + Power BI Project",
+  teach:["No new concept \u2014 pure practice day, stacking everything from Days 6\u201310."],
+  live:["On DB Fiddle, build \u201ctop 5 Swiggy customers by total spend\u201d: SELECT + JOIN (Customers+Orders) + GROUP BY (per customer) + ORDER BY (spend descending) + LIMIT 5.","Recreate the same idea in Power BI: import + connect two related tables, add a table visual showing Customer + Total Spend, sort descending."],
+  hw:{steps:["None \u2014 catch-up day if behind.","Otherwise finish whichever half wasn't completed live."], time:"\u2014"},
+  terms:[],
+  summary:"Filtering, joining, and aggregating together is how most real business questions actually get answered \u2014 in SQL or in Power BI.",
+  check:["Walk through, in your own words, how you found the top 5 customers by spend.","Did you filter first or aggregate first? Why does the order matter?","What was the trickiest part of combining SQL and Power BI today?","What's one question you could answer with this same query pattern on a different dataset?"] },
+
+]},
+{ title:"SQL Depth + Visuals + Statistics", days:[
+
+{ n:12, title:"Views, Subqueries & Data Quality + Power Query Cleaning",
+  teach:["A subquery is a query nested inside another \u2014 it runs first, and its result is used by the outer query.","Common pattern: SELECT * FROM Customers WHERE TotalSpend > (SELECT AVG(TotalSpend) FROM Customers); \u2014 the inner query calculates one number, the outer query uses it as a threshold.","A view saves a query permanently under a name, so anyone can SELECT * FROM ViewName instead of rewriting the logic.","Data quality has 5 common dimensions worth checking deliberately: Accuracy (is the value correct?), Completeness (are there missing/null values?), Consistency (is the same thing recorded the same way everywhere \u2014 e.g. \u201cMumbai\u201d vs \u201cmumbai\u201d vs \u201cBombay\u201d?), Timeliness (is the data current enough to be useful?), Validity (does it fit expected rules, like a date that isn't in the future?).","Duplicates are repeated rows that silently inflate totals \u2014 worth checking for and removing before aggregating; nulls/blanks should be handled deliberately (remove, fill with a default, or flag), not ignored.","Power Query is Power BI's data-cleaning environment \u2014 every action (remove column, change type, filter rows, remove duplicates) becomes a recorded \u201cstep,\u201d repeatable every time the data refreshes."],
+  live:["SQL (10 min): \u201ccustomers who spent more than average\u201d as a subquery (Mode or DB Fiddle), continuing the Swiggy dataset.","Power Query (25 min): open the editor on their imported data. Show a duplicate row and a couple of nulls; discuss which data quality dimension each violates, then fix both (Remove Duplicates, Replace/Fill Values) plus a data-type fix."],
+  hw:{steps:["Mode SQL Tutorial \u201cSubqueries\u201d section.","Clean their own table in Power Query \u2014 fix at least 3 issues, and check specifically for duplicates and nulls, noting which data quality dimension each falls under."], time:"~45 min"},
+  terms:[["Subquery","A query nested inside another query"],["Power Query","Power BI's data-cleaning and shaping environment"],["Data quality dimensions","Accuracy, completeness, consistency, timeliness, validity"],["Duplicate rows","Repeated records that inflate totals if left unchecked"]],
+  summary:"A subquery answers a smaller question first so the outer query can use that answer; data quality is a deliberate check across 5 dimensions, not just \u201cdoes it look okay.\u201d",
+  check:["What does a subquery do differently from a JOIN, in your own words?","Name the 5 data quality dimensions, and give an example of each from your own data.","Why clean data before building visuals, rather than after?","What's the difference between removing a duplicate row and filtering a null value \u2014 why treat them differently?"] },
+
+{ n:13, title:"SQL Window Functions", isNew:true,
+  teach:["Window functions perform a calculation across a set of rows related to the current row, without collapsing them into a single row the way GROUP BY does.","ROW_NUMBER() OVER (ORDER BY column): assigns a sequential number to each row based on the specified order \u2014 useful for simple row-by-row ranking.","RANK() OVER (PARTITION BY column ORDER BY column): ranks rows within groups (partitions) \u2014 ties get the same rank, with a gap afterward.","A running total pattern: SUM(amount) OVER (ORDER BY date) \u2014 adds up values progressively, row by row, without needing a subquery.","Why this matters for an analyst: \u201ctop N per group\u201d (e.g. top 3 customers per region) and running totals are extremely common real-world questions that plain GROUP BY can't answer alone."],
+  live:["Write: SELECT name, continent, population, RANK() OVER (PARTITION BY continent ORDER BY population DESC) AS rank FROM world; on SQLZoo or DB Fiddle.","Discuss: this ranks each country within its own continent, not globally \u2014 compare India's rank in Asia vs its global rank.","Try a running total: SELECT date, amount, SUM(amount) OVER (ORDER BY date) AS running_total FROM sales;"],
+  hw:{steps:["Search \u201cSQL window functions practice\u201d and complete a short exercise, or use Mode's window functions material if available.","Write one RANK() query on the World dataset \u2014 e.g. rank countries by GDP within their continent."], time:"~45 min"},
+  terms:[["Window function","A calculation across related rows without collapsing them"],["ROW_NUMBER","Assigns a sequential number per row"],["RANK / PARTITION BY","Ranks rows within groups defined by PARTITION BY"]],
+  summary:"Window functions let you rank or run totals across rows without collapsing them the way GROUP BY does \u2014 essential for \u201ctop N per group\u201d and running-total questions.",
+  check:["What's the difference between GROUP BY and a window function?","What does PARTITION BY do inside a window function?","When would you use RANK() instead of ROW_NUMBER()?","How would you find the top 3 customers by spend within each region?"] },
+
+{ n:14, title:"Core Power BI Visuals",
+  visual: `<svg viewBox="0 0 600 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;">
+<rect x="10" y="10" width="130" height="80" rx="6" fill="#fffdf8" stroke="#d8d2c2"/>
+<polyline points="25,70 55,40 80,60 105,30 125,50" fill="none" stroke="#4a6485" stroke-width="2.5"/>
+<text x="75" y="105" text-anchor="middle" font-size="11" fill="#1f2a24">Line: trend over time</text>
+<rect x="160" y="10" width="130" height="80" rx="6" fill="#fffdf8" stroke="#d8d2c2"/>
+<rect x="178" y="55" width="14" height="25" fill="#3f6d54"/>
+<rect x="200" y="35" width="14" height="45" fill="#3f6d54"/>
+<rect x="222" y="50" width="14" height="30" fill="#3f6d54"/>
+<rect x="244" y="25" width="14" height="55" fill="#3f6d54"/>
+<text x="225" y="105" text-anchor="middle" font-size="11" fill="#1f2a24">Bar: compare categories</text>
+<rect x="310" y="10" width="130" height="80" rx="6" fill="#fffdf8" stroke="#d8d2c2"/>
+<circle cx="375" cy="50" r="30" fill="#a8623f" opacity="0.3"/>
+<path d="M 375 50 L 375 20 A 30 30 0 0 1 400 65 Z" fill="#a8623f"/>
+<text x="375" y="105" text-anchor="middle" font-size="11" fill="#1f2a24">Pie: parts of a whole</text>
+<rect x="460" y="10" width="130" height="80" rx="6" fill="#fffdf8" stroke="#d8d2c2"/>
+<line x1="475" y1="35" x2="575" y2="35" stroke="#7a7566" stroke-width="1"/>
+<line x1="475" y1="55" x2="575" y2="55" stroke="#7a7566" stroke-width="1"/>
+<line x1="475" y1="75" x2="575" y2="75" stroke="#7a7566" stroke-width="1"/>
+<line x1="510" y1="20" x2="510" y2="80" stroke="#7a7566" stroke-width="1"/>
+<line x1="545" y1="20" x2="545" y2="80" stroke="#7a7566" stroke-width="1"/>
+<text x="525" y="105" text-anchor="middle" font-size="11" fill="#1f2a24">Table: exact numbers</text>
+</svg>`,
+  teach:["Line chart: best for showing a trend over time (sales by month).","Bar/column chart: best for comparing values across categories (sales by state/region).","Pie chart: shows parts of a whole \u2014 becomes unreadable past 4\u20135 slices, so use sparingly.","Table/Matrix: best when exact numbers matter more than the visual pattern, or when showing multiple dimensions at once.","Building any visual: pick a visual type from the Visualizations pane, then drag fields onto Axis/Legend/Values."],
+  live:["Build \u201cSales by Month\u201d as a line chart \u2014 Date to Axis, Sales to Values.","Build \u201cSales by State\u201d as a bar chart \u2014 State to Axis, Sales to Values.","Point out the festive-season spike around Diwali if using a retail-style dataset."],
+  hw:{steps:["Build 3 different visuals from their own dataset."], time:"~40 min"},
+  terms:[["Axis","The field(s) that define categories or time on a visual"],["Values","The numeric field(s) being measured or plotted"]],
+  summary:"The right chart type depends on the question \u2014 trend over time needs a line, comparison across categories needs a bar, composition needs a pie (used sparingly).",
+  check:["When would you use a line chart instead of a bar chart?","Why is a pie chart risky with more than 4\u20135 categories?","What visual did you build today, and why did you pick that type?","When would a table/matrix be better than any chart?"] },
+
+{ n:15, title:"SQL Mini Project",
+  teach:["No new concept \u2014 applying SELECT, WHERE, JOIN, and GROUP BY together on one real question."],
+  live:["Combine SELECT + WHERE + JOIN + GROUP BY into \u201ctop 5 customers by total spend\u201d on DB Fiddle, continuing the Swiggy dataset \u2014 build it step by step, checking the result after each clause is added."],
+  hw:{steps:["Finish independently if not done live.","Try one variation \u2014 e.g. top 5 by order count instead of spend."], time:"~40 min"},
+  terms:[],
+  summary:"No new concept today \u2014 the goal was stacking SELECT, WHERE, JOIN, and GROUP BY together to answer one real question end to end.",
+  check:["What was your final query for top 5 customers by spend?","What would you change to instead find \u201ctop 5 by order count\u201d?","Where did you get stuck, if anywhere?","How would you adapt this query to find the bottom 5 instead?"] },
+
+{ n:16, title:"Slicers & Filters in Power BI",
+  teach:["Filters (the Filters pane) narrow data at three levels: visual-level (one chart), page-level (everything on the current page), report-level (every page).","A slicer is a visual, on-canvas filter control \u2014 a dropdown, list, or date range the viewer can click themselves, without opening the Filters pane.","Cross-filtering: clicking a value in one visual (e.g. a bar for \u201cMaharashtra\u201d) automatically filters other visuals on the page to match \u2014 Power BI's default interactive behavior.","Common slicer types: category slicer (dropdown/list), date range slicer (calendar/slider)."],
+  live:["Add a date slicer \u2014 drag the date field into a Slicer visual.","Add a category slicer (e.g. State/Region).","Set the date slicer to just the Diwali/festive window and watch every visual update; demonstrate cross-filtering by clicking a bar in one chart."],
+  hw:{steps:["Add 2 slicers to their own report."], time:"~40 min"},
+  terms:[["Slicer","An on-canvas filter control the viewer can click"],["Cross-filtering","Clicking one visual automatically filters others on the page"]],
+  summary:"A slicer lets the person viewing the report filter it themselves, without touching the underlying design \u2014 that's what makes a report self-service.",
+  check:["What's the difference between a filter and a slicer?","What's the difference between page-level and visual-level filtering?","Why does cross-filtering matter for someone using your dashboard?","If you wanted a slicer to affect every page, not just one, what would you check?"] },
+
+{ n:17, title:"Week 3 Recap: Mini Dashboard",
+  teach:["No new concept \u2014 combining everything from Weeks 2\u20133 into one page."],
+  live:["Combine imported + cleaned data, 3\u20134 visuals, and slicers into one dashboard page \u2014 discuss layout choices as you go (what goes top-left, what's the 'headline' number)."],
+  hw:{steps:["None \u2014 polish time."], time:"\u2014"},
+  terms:[],
+  summary:"A dashboard isn't just several visuals on a page \u2014 it should add up to one coherent story with a clear main takeaway.",
+  check:["What's the one takeaway your dashboard is trying to communicate?","Which visual on your page do you think is least useful, and why?","What would you add if you had 20 more minutes?","Which visual did you place top-left, and why did you choose that one?"] },
+
+{ n:18, title:"Basic Statistics for Analysts", isNew:true,
+  teach:["Mean (average), median (middle value), and mode (most frequent value) each tell a different story \u2014 a dataset with a few extreme outliers can have a misleading mean while the median stays representative.","Outliers: unusually high or low values that can distort averages and charts \u2014 worth identifying before trusting a summary number.","Distribution: the shape of how values are spread out \u2014 are most orders clustered around a typical value, or spread widely?","Correlation vs causation: two things moving together (e.g. ice cream sales and temperature) doesn't mean one causes the other \u2014 a critical guardrail before making claims from a dashboard.","Percentiles: useful for questions like \u201cwhat does a typical top-10% customer spend?\u201d rather than just the average."],
+  live:["Take a small sales dataset with one extreme outlier (e.g. one order 50x larger than the rest).","Calculate mean and median together \u2014 show how different they are.","Discuss: which number would you actually put on a dashboard, and would you also flag the outlier separately?","Quick example of correlation vs causation: \u201cDiwali sales and gift-wrapping sales both spike together \u2014 does one cause the other, or is there a third factor (the festival itself)?\u201d"],
+  hw:{steps:["On their own dataset, calculate mean and median of a numeric column (in Excel or Power BI) and compare them.","Note if there's a big gap, and if so, what's causing it."], time:"~35\u201340 min"},
+  terms:[["Mean / Median / Mode","Three different ways to summarize a typical value"],["Outlier","An unusually high or low value that distorts averages"],["Correlation vs causation","Two things moving together doesn't mean one causes the other"]],
+  summary:"Averages can lie when outliers are present \u2014 checking the median alongside the mean, and staying skeptical of correlation as proof of causation, are basic guardrails every analyst needs.",
+  check:["When would the median be more useful than the mean?","What's an outlier, and why does it matter for a dashboard?","Give an example of two things that correlate but don't cause each other.","If your average order value looks unusually high this month, what would you check first?"] },
+
+]},
+{ title:"Warehousing, Star Schema, Databricks & DAX", days:[
+
+{ n:19, title:"Data Warehouses vs Data Lakes vs Lakehouses",
+  visual: `<svg viewBox="0 0 620 170" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;">
+<rect x="10" y="10" width="185" height="150" rx="8" fill="#fffdf8" stroke="#4a6485" stroke-width="1.5"/>
+<text x="102" y="35" text-anchor="middle" font-size="12" font-weight="600" fill="#4a6485">Data Lake</text>
+<text x="102" y="60" text-anchor="middle" font-size="10.5" fill="#1f2a24">Raw, any format</text>
+<text x="102" y="78" text-anchor="middle" font-size="10.5" fill="#1f2a24">Cheap, flexible</text>
+<text x="102" y="96" text-anchor="middle" font-size="10.5" fill="#1f2a24">Not report-ready</text>
+<rect x="217" y="10" width="185" height="150" rx="8" fill="#fffdf8" stroke="#3f6d54" stroke-width="1.5"/>
+<text x="309" y="35" text-anchor="middle" font-size="12" font-weight="600" fill="#3f6d54">Data Warehouse</text>
+<text x="309" y="60" text-anchor="middle" font-size="10.5" fill="#1f2a24">Cleaned, structured</text>
+<text x="309" y="78" text-anchor="middle" font-size="10.5" fill="#1f2a24">Built for reporting</text>
+<text x="309" y="96" text-anchor="middle" font-size="10.5" fill="#1f2a24">Less flexible</text>
+<rect x="424" y="10" width="185" height="150" rx="8" fill="#fffdf8" stroke="#a8623f" stroke-width="1.5"/>
+<text x="516" y="35" text-anchor="middle" font-size="12" font-weight="600" fill="#a8623f">Lakehouse</text>
+<text x="516" y="60" text-anchor="middle" font-size="10.5" fill="#1f2a24">Raw + structured</text>
+<text x="516" y="78" text-anchor="middle" font-size="10.5" fill="#1f2a24">e.g. Databricks</text>
+<text x="516" y="96" text-anchor="middle" font-size="10.5" fill="#1f2a24">Best of both, one platform</text>
+</svg>`,
+  teach:["Data lake: stores raw data in its original, often unstructured or semi-structured format (JSON logs, images, raw exports) \u2014 cheap and flexible, but not directly report-ready.","Data warehouse: stores cleaned, structured, modeled data organized specifically for fast reporting and business questions.","Lakehouse: a newer architecture (Databricks' core pitch) combining lake flexibility with warehouse reliability/structure in one platform, using a table format like Delta Lake.","Why this matters for an analyst: knowing whether a source is \u201clake-raw\u201d or \u201cwarehouse-clean\u201d tells you how much cleanup to expect before it's usable in Power BI."],
+  live:["\u201cRaw UPI transaction logs streaming in every second\u201d \u2014 discuss as lake-style data: massive volume, semi-structured, not yet aggregated.","\u201cA clean monthly GST filing summary table\u201d \u2014 discuss as warehouse-style data: already aggregated, structured, ready to report on."],
+  hw:{steps:["Sign up for Databricks Free Edition.","Look around the workspace \u2014 no tasks yet."], time:"~30 min"},
+  terms:[["Data lake","Raw data storage in original format"],["Data warehouse","Cleaned, structured data ready for reporting"],["Lakehouse","A platform combining lake flexibility with warehouse structure"]],
+  summary:"Lakes hold raw data in any format; warehouses hold cleaned, structured data ready for reporting; a lakehouse tries to give you both in one platform.",
+  check:["What's the difference between a data lake and a data warehouse, in your own words?","Give one example each of \u201craw\u201d data and \u201creporting-ready\u201d data.","Why might a company want both a lake and a warehouse?","Where would you guess a lakehouse sits between the two?"] },
+
+{ n:20, title:"Star Schema & Dimensional Modeling", isNew:true,
+  visual: `<svg viewBox="0 0 560 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:460px;height:auto;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;">
+<line x1="280" y1="130" x2="280" y2="65" stroke="#7a7566" stroke-width="1.5"/>
+<line x1="195" y1="160" x2="150" y2="160" stroke="#7a7566" stroke-width="1.5"/>
+<line x1="365" y1="160" x2="410" y2="160" stroke="#7a7566" stroke-width="1.5"/>
+<line x1="280" y1="190" x2="280" y2="255" stroke="#7a7566" stroke-width="1.5"/>
+<rect x="195" y="130" width="170" height="60" rx="8" fill="#a8623f" opacity="0.15" stroke="#a8623f" stroke-width="1.5"/>
+<text x="280" y="155" text-anchor="middle" font-size="12" font-weight="600" fill="#1f2a24">Orders</text>
+<text x="280" y="172" text-anchor="middle" font-size="10" fill="#7a7566">(Fact table)</text>
+<rect x="215" y="15" width="130" height="50" rx="8" fill="#fffdf8" stroke="#3f6d54" stroke-width="1.5"/>
+<text x="280" y="45" text-anchor="middle" font-size="11" fill="#1f2a24">Date</text>
+<rect x="10" y="135" width="140" height="50" rx="8" fill="#fffdf8" stroke="#3f6d54" stroke-width="1.5"/>
+<text x="80" y="165" text-anchor="middle" font-size="11" fill="#1f2a24">Customers</text>
+<rect x="410" y="135" width="140" height="50" rx="8" fill="#fffdf8" stroke="#3f6d54" stroke-width="1.5"/>
+<text x="480" y="165" text-anchor="middle" font-size="11" fill="#1f2a24">Restaurants</text>
+<rect x="215" y="255" width="130" height="50" rx="8" fill="#fffdf8" stroke="#3f6d54" stroke-width="1.5"/>
+<text x="280" y="285" text-anchor="middle" font-size="11" fill="#1f2a24">Payment Method</text>
+</svg>`,
+  teach:["A star schema organizes data into fact tables (the events/transactions being measured \u2014 e.g. Sales) and dimension tables (the descriptive context around those events \u2014 e.g. Customer, Product, Date, Region).","Fact tables are typically long and narrow: lots of rows, few columns, mostly numbers and foreign keys (e.g. every single Swiggy order).","Dimension tables are typically short and wide: fewer rows, more descriptive columns (e.g. a Customer table with name, city, signup date).","The \u201cstar\u201d shape: one central fact table connected to several dimension tables around it, each linked by a key \u2014 this is the standard pattern behind almost every professional Power BI model.","Why it matters: a well-built star schema makes DAX simpler, relationships cleaner, and reports faster \u2014 vs. one giant flat table trying to hold everything."],
+  live:["Take the Swiggy example and identify: what's the fact table (Orders) and what are the dimension tables (Customers, Restaurants, Date)?","Draw the star shape: Orders in the center, with lines out to Customers, Restaurants, Date.","Contrast with a single flat table holding everything \u2014 point out the repetition problem from Day 3, now at a bigger scale."],
+  hw:{steps:["Take one of their own datasets (a capstone candidate) and identify what would be the fact table and what would be the dimension table(s).","Sketch the star shape."], time:"~40 min"},
+  terms:[["Fact table","The central table of events/transactions being measured"],["Dimension table","A descriptive table providing context around a fact"],["Star schema","One fact table connected to surrounding dimension tables"]],
+  summary:"A star schema separates \u201cwhat happened\u201d (fact table) from \u201cthe context around it\u201d (dimension tables) \u2014 this is the standard structure behind virtually every professional Power BI model.",
+  check:["What's the difference between a fact table and a dimension table?","Why is a fact table usually long and narrow, while a dimension table is short and wide?","In the Swiggy example, what would the fact table be, and what would the dimensions be?","Why might a single giant flat table cause problems compared to a star schema?"] },
+
+{ n:21, title:"Databricks Conceptual Tour",
+  teach:["Databricks is a cloud-based platform for processing large volumes of data, built on top of Apache Spark.","A notebook is where code (Python, SQL, Scala) runs interactively, cell by cell \u2014 where data engineers/scientists write transformation and analysis logic.","A cluster is the computing power (virtual machines) that actually runs the notebook's code \u2014 scalable up or down depending on job size.","A Delta table is Databricks' structured table format \u2014 a table with reliability features (like rolling back to a previous version) on top of raw file storage.","For an analyst, the goal is recognition: knowing these terms means you can follow a conversation about \u201cthe data landing in a Delta table after the notebook runs on the cluster\u201d without being lost."],
+  live:["Screen-share a real (redacted) Databricks workspace \u2014 point out where notebooks live, what a running cluster looks like, and a Delta table in the catalog."],
+  hw:{steps:["Watch one short \u201cWhat is Databricks\u201d intro video.","Write 3 takeaways."], time:"~30 min"},
+  terms:[["Notebook","Interactive code environment in Databricks"],["Cluster","The compute power running notebook code"],["Delta table","Databricks' structured, reliable table format"]],
+  summary:"Databricks is a cloud platform for processing large-scale data, built around notebooks (code) and Delta tables (storage) \u2014 today was about recognition, not operation.",
+  check:["What is a notebook used for in Databricks, at a high level?","Where might Databricks sit in a company's overall data pipeline?","What's one thing you still don't understand about Databricks?","What's the difference between a cluster and a notebook?"] },
+
+{ n:22, title:"How Data Flows into Power BI",
+  visual: `<svg viewBox="0 0 680 110" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:600px;height:auto;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;">
+<rect x="10" y="15" width="140" height="60" rx="8" fill="#fffdf8" stroke="#4a6485" stroke-width="1.5"/>
+<text x="80" y="42" text-anchor="middle" font-size="11" fill="#1f2a24">Source</text>
+<text x="80" y="58" text-anchor="middle" font-size="10" fill="#7a7566">on-prem / cloud</text>
+<line x1="150" y1="45" x2="182" y2="45" stroke="#7a7566" stroke-width="1.5"/>
+<polygon points="182,40 190,45 182,50" fill="#7a7566"/>
+<rect x="192" y="15" width="150" height="60" rx="8" fill="#fffdf8" stroke="#3f6d54" stroke-width="1.5"/>
+<text x="267" y="42" text-anchor="middle" font-size="11" fill="#1f2a24">Warehouse / Lake</text>
+<text x="267" y="58" text-anchor="middle" font-size="10" fill="#7a7566">cleaned or raw</text>
+<line x1="342" y1="45" x2="374" y2="45" stroke="#7a7566" stroke-width="1.5"/>
+<polygon points="374,40 382,45 374,50" fill="#7a7566"/>
+<rect x="392" y="15" width="130" height="60" rx="8" fill="#fffdf8" stroke="#a8623f" stroke-width="1.5"/>
+<text x="457" y="48" text-anchor="middle" font-size="12" fill="#1f2a24" font-weight="600">Power BI</text>
+<line x1="522" y1="35" x2="554" y2="20" stroke="#7a7566" stroke-width="1.5"/>
+<text x="600" y="18" text-anchor="middle" font-size="10" fill="#7a7566">Import (copy)</text>
+<line x1="522" y1="55" x2="554" y2="70" stroke="#7a7566" stroke-width="1.5"/>
+<text x="610" y="78" text-anchor="middle" font-size="10" fill="#7a7566">DirectQuery (live)</text>
+</svg>`,
+  teach:["Revisit the full pipeline: source system (on-prem or cloud) \u2192 data lake/warehouse (often shaped as a star schema, per Day 20) \u2192 Power BI.","Power BI's Get Data source list includes Excel/CSV, SQL Server, Azure SQL, Databricks, SharePoint, Salesforce, web pages, and dozens more \u2014 most companies use a consistent handful.","Import mode: Power BI copies a snapshot of the data in; fast to work with, but needs scheduled refresh to stay current.","DirectQuery mode: no data copied \u2014 every visual sends a live query to the source; always current, but can be slower and depends on source availability.","The choice is a trade-off between performance (Import usually wins) and freshness (DirectQuery usually wins) \u2014 large or fast-changing datasets often need DirectQuery."],
+  live:["Scroll the Get Data dialog together, identify 3 sources they now recognize from Weeks 1, 3, and 4 (e.g. SQL Server, Databricks, Excel)."],
+  hw:{steps:["Screenshot 3 source types.","Write one sentence on when you'd pick each."], time:"~35 min"},
+  terms:[["Import mode","Power BI copies a snapshot of the data in"],["DirectQuery","Power BI queries the source live, without copying data"]],
+  summary:"Power BI can pull from almost any source in the pipeline you've now seen end to end \u2014 Import copies the data in, DirectQuery leaves it where it is and queries live.",
+  check:["What's the difference between Import and DirectQuery?","Name two source types you saw in Get Data.","Why might DirectQuery be preferred for very large, frequently-changing data?","Why does Import usually perform faster than DirectQuery?"] },
+
+{ n:23, title:"DAX Intro: Calculated Columns",
+  teach:["DAX (Data Analysis Expressions) is Power BI's formula language \u2014 used for calculated columns, measures, and calculated tables.","A calculated column adds a new column to a table; it's computed once per row, and the result is stored in the model like any imported column.","Basic syntax: NewColumnName = <expression referencing other columns in the same row>, e.g. Profit = Sales[Amount] - Sales[Cost].","Calculated columns suit row-level logic (categorization, flags, per-row math) but should be used sparingly on very large tables since they increase model size."],
+  live:["Create \u201cProfit = Sales - Cost\u201d as a calculated column \u2014 or, on a bill/invoice dataset, \u201cPrice Including GST = Base Price \u00d7 1.18\u201d (18% GST as a common example rate)."],
+  hw:{steps:["Create 2 calculated columns on their own data."], time:"~40 min"},
+  terms:[["DAX","Power BI's formula language"],["Calculated column","A new column computed once per row, stored in the model"]],
+  summary:"A calculated column adds a brand-new column to a table, computed once per row using DAX \u2014 it behaves just like any imported column after that.",
+  check:["What's the difference between a calculated column and a regular imported column?","In words, what does \u201cProfit = Sales - Cost\u201d calculate for each row?","Why might too many calculated columns slow a large model down?","Would you use a calculated column to flag \u201chigh-value order\u201d (yes/no)? Why or why not?"] },
+
+{ n:24, title:"DAX Measures & Model Performance",
+  teach:["A measure is also written in DAX, but unlike a calculated column, it doesn't store a value per row \u2014 it calculates dynamically, based on whatever filters/slicers are currently applied.","Basic measure: Total Sales = SUM(Sales[Amount]) \u2014 recalculates automatically whenever a slicer or filter changes what's visible.","CALCULATE(<expression>, <filter conditions>) lets you override or add filters within a measure \u2014 e.g. Total Sales Festive = CALCULATE(SUM(Sales[Amount]), Sales[Period] = \"Diwali\").","The single most important distinction for a beginner: calculated column = fixed per row; measure = dynamic per view.","Model performance is heavily shaped by structure: a proper star schema (Day 20) with fewer, well-typed columns performs far better than one giant flat table \u2014 removing unused columns during Power Query cleanup isn't just tidiness, it reduces memory footprint and speeds up refresh and visuals. Measures are also generally more efficient than calculated columns for aggregate calculations, since they compute on demand rather than storing a value for every row."],
+  live:["Build \u201cTotal Sales\u201d as SUM(Sales[Amount]); then build \u201cTotal Sales During Diwali\u201d using CALCULATE with a filter condition \u2014 show both numbers side by side and explain why one changes when a slicer is applied and the calculated column wouldn't.","Look at their model together and point out any unused columns that could be removed, tying back to the star schema they sketched on Day 20."],
+  hw:{steps:["Write 2 measures on their own data \u2014 a plain total and a filtered total."], time:"~40 min"},
+  terms:[["Measure","A DAX calculation that updates dynamically with filter context"],["CALCULATE","Overrides or adds filter conditions inside a measure"],["Model size / column pruning","Removing unused columns to keep the model fast"]],
+  summary:"Unlike a calculated column, a measure recalculates dynamically based on whatever filters or slicers are currently applied \u2014 and a lean, well-shaped model (fewer columns, proper star schema) is what keeps that fast.",
+  check:["What's the biggest difference between a measure and a calculated column?","What does CALCULATE let you do that a plain SUM can't?","Give an example of when a filtered total is more useful than a plain total.","Why does removing unused columns help model performance, not just tidiness?"] },
+
+{ n:25, title:"Power Query Deeper: Transformations",
+  teach:["Split Column: breaks one column into multiple based on a delimiter (space, comma) or character count \u2014 e.g. splitting \u201cFull Name\u201d into \u201cFirst Name\u201d and \u201cLast Name.\u201d","Merge Queries: Power Query's equivalent of a SQL JOIN \u2014 combines columns from two queries based on a matching key column.","Append Queries: stacks rows from two queries with the same structure into one (different from Merge, which adds columns).","Pivot/Unpivot: reshapes data between \u201cwide\u201d format (one column per category) and \u201clong\u201d format (one row per category) \u2014 Power BI generally prefers long/unpivoted data for visuals.","Correct data types at this stage prevent downstream errors in DAX and visuals \u2014 worth re-checking every time a new source is added."],
+  live:["Fix a deliberately messy CSV together \u2014 split a \u201cFull Name\u201d column into first/last, split an address column to pull out the PIN code, then merge with a second table on a shared key."],
+  hw:{steps:["Apply the same fixes to one of their own tables."], time:"~45 min"},
+  terms:[["Split Column","Breaks one column into several"],["Merge Queries","Power Query's join, combining columns from two tables"],["Append Queries","Stacks rows from two same-structure tables"]],
+  summary:"Clean, correctly-typed data at the Power Query stage makes every later step \u2014 relationships, DAX, visuals \u2014 easier and more accurate.",
+  check:["Why does splitting a \u201cFull Name\u201d column matter for later analysis?","What's the difference between merging and appending two queries?","Name one transformation you applied today.","When would you unpivot a table instead of leaving it wide?"] },
+
+{ n:26, title:"DAX Time Intelligence (Basics)",
+  teach:["Time intelligence functions handle common date-based comparisons without manual filtering \u2014 they rely on Power BI recognizing a proper Date column.","TOTALYTD(<expression>, <date column>) \u2014 running total from the start of the year up to the current filter context's date.","SAMEPERIODLASTYEAR(<date column>) \u2014 used inside CALCULATE to shift the current filter back exactly one year, letting you compare this year to last year.","These functions fail or give wrong results if the date column has gaps, wrong types, or isn't marked as a proper date table \u2014 why Day 25's cleanup matters here."],
+  live:["Build \u201cSales YTD\u201d using TOTALYTD; then build \u201cSales Same Period Last Year\u201d and compare this Diwali's sales to last Diwali's using CALCULATE + SAMEPERIODLASTYEAR."],
+  hw:{steps:["Attempt 1 time-intelligence measure on their own dataset."], time:"~40 min"},
+  terms:[["TOTALYTD","Running total from the start of the year to the current date"],["SAMEPERIODLASTYEAR","Shifts the current date filter back one year"]],
+  summary:"Time intelligence functions handle date-based comparisons (year-to-date, same period last year) that would otherwise need manual filtering every time.",
+  check:["What does SAMEPERIODLASTYEAR let you compare?","Why do these functions need a real, properly-typed date column to work?","What business question would TOTALYTD answer for you?","What might go wrong if your date column has missing days?"] },
+
+]},
+{ title:"Interactivity, Storytelling & Publishing", days:[
+
+{ n:27, title:"Advanced Interactivity: Bookmarks, Drill-through & Tooltips", isNew:true,
+  teach:["Bookmarks capture a specific state of a report page (which filters are applied, which visuals are visible) so you can jump back to it with one click \u2014 useful for guided walkthroughs or toggling between views.","Drill-through lets a viewer right-click a data point on one page and jump to a detail page filtered to just that item \u2014 e.g. click a region on a summary page, land on a page showing that region's full detail.","Tooltips show extra information when hovering over a visual \u2014 can be a simple default tooltip or a fully custom report page shown as a mini popup.","These features turn a static-feeling dashboard into something that feels like an application \u2014 letting the viewer explore without you building 10 separate static reports."],
+  live:["Create two bookmarks on their capstone-candidate dashboard: one showing \u201cAll Regions\u201d and one showing a specific region filtered \u2014 add buttons to toggle between them.","Set up a simple drill-through: a detail page that filters to whatever category is clicked on the summary page.","Show a default tooltip and, if time allows, point out how a custom tooltip page would work."],
+  hw:{steps:["Add 1 bookmark and 1 drill-through page to their own report."], time:"~40 min"},
+  terms:[["Bookmark","Captures a specific filter/visual state of a page"],["Drill-through","Jumps to a filtered detail page from a clicked data point"],["Tooltip","Extra information shown on hover"]],
+  summary:"Bookmarks, drill-through, and tooltips add layers of interactivity that let a viewer explore a report themselves, instead of you building a separate static page for every possible question.",
+  check:["What does a bookmark capture?","How is drill-through different from a slicer?","When would a custom tooltip be more useful than a default one?","What's one place in your dashboard where drill-through would help?"] },
+
+{ n:28, title:"Dashboard Design Best Practices",
+  teach:["Every dashboard page should have one clear message \u2014 if you can't state it in one sentence, the page is trying to do too much.","Layout: put the most important number/visual top-left (where eyes land first); group related visuals together.","Color: use color to highlight meaning (e.g. red for below target), not decoration \u2014 too many colors dilute the signal.","Avoid clutter: not every column needs its own chart; combine related metrics into fewer, denser visuals (like a matrix) where it makes sense.","Titles and labels should use plain business language, not raw field names (e.g. \u201cMonthly Revenue\u201d not \u201cSUM_AMT_2024\u201d)."],
+  live:["Show a cluttered dashboard (too many colors, too many small charts, no clear headline) side by side with a clean redesign of the same data \u2014 discuss what changed and why it's easier to read."],
+  hw:{steps:["Redesign their dashboard applying 3 best practices."], time:"~40 min"},
+  terms:[["Visual hierarchy","The order in which a viewer's eyes are drawn across a page"]],
+  summary:"Good dashboards prioritize clarity over decoration \u2014 one message per page, restrained color, and no chart that doesn't earn its place.",
+  check:["Name one design flaw in the \u201cbefore\u201d dashboard you looked at today.","Why can too much color reduce clarity instead of adding it?","What's the single most important thing a viewer should take away from your dashboard?","Where should the most important number on your page go, and why?"] },
+
+{ n:29, title:"Data Storytelling & Insights Writing", isNew:true,
+  teach:["A dashboard shows data; a good analyst also writes the takeaway \u2014 the one or two sentences someone could read without even opening the report.","Structure for a good insight: What happened (the fact) + So what (why it matters) + Now what (a suggested next step or question), kept to 2\u20133 sentences.","Avoid just restating the chart in words (\u201csales went up in October\u201d) \u2014 add context (\u201csales went up 18% in October, driven mainly by the festive season, suggesting we should staff up similarly next year\u201d).","Insights should be honest about uncertainty \u2014 if a pattern might be a one-off or might be seasonal, say so rather than overstating confidence."],
+  live:["Look at their capstone-candidate dashboard together.","Write one insight as a group using the What/So what/Now what structure.","Critique a \u201cbad\u201d insight (just restating a number) vs a \u201cgood\u201d one (adds context and a next step)."],
+  hw:{steps:["Write 2 insights for their own dashboard using the What/So what/Now what structure."], time:"~35 min"},
+  terms:[["Insight","A takeaway that explains what happened, why it matters, and what to do next"],["What/So what/Now what","A simple structure for writing an insight"]],
+  summary:"A dashboard shows data, but a good analyst also writes what it means and what to do next \u2014 that's the difference between a chart and an insight.",
+  check:["What's the difference between restating a number and writing an insight?","What does the \u201cSo what\u201d part of an insight actually answer?","Why should an insight mention uncertainty when it exists?","Write one insight sentence about your dashboard right now, off the top of your head."] },
+
+{ n:30, title:"Publishing to Power BI Service",
+  teach:["Power BI Desktop is the authoring tool (installed locally); Power BI Service is the online platform (app.powerbi.com) where published reports live and are viewed/shared.","A workspace is a container in the Service that holds related reports, dashboards, and datasets \u2014 similar to a folder, but with its own access permissions.","Publishing sends the report and data model from your .pbix file up to a workspace in the Service.","After publishing, the report opens in a browser \u2014 anyone with access to that workspace (per their role) can view or interact with it."],
+  live:["Publish their dashboard from Desktop (Home tab \u2192 Publish), select a workspace, then open the published report in the browser together."],
+  hw:{steps:["Publish their own report.","Share the link with you."], time:"~30 min"},
+  terms:[["Power BI Service","The online platform where published reports live"],["Workspace","A container for related reports, dashboards, and datasets"]],
+  summary:"Publishing moves your report from a local Desktop file into the Power BI Service, where it lives online inside a workspace and can be shared.",
+  check:["What's the difference between Power BI Desktop and Power BI Service?","What is a workspace, in your own words?","Who can see your report right after you publish it, by default?","What would you need to do to let a colleague view your published report?"] },
+
+{ n:31, title:"Refresh, Gateways & Sharing + Week 5 Recap",
+  teach:["Scheduled refresh keeps a published report's data current by re-running the import on a schedule (e.g. daily at 6am) instead of manually republishing.","A gateway is required when the data source is on-prem (or otherwise unreachable directly from the cloud) \u2014 a small piece of software installed on a machine that can reach the source, acting as a secure bridge for the Service to pull data through.","Cloud sources (like a cloud SQL database) usually don't need a gateway since the Service can reach them directly over the internet.","Sharing a report vs sharing a workspace: sharing a report gives view access to just that report; adding someone to a workspace as a role (Viewer, Contributor, Member, Admin) controls broader access.","Row-level security (RLS) \u2014 conceptual only \u2014 lets different viewers see different rows of the same report based on who's logged in (e.g. a regional manager sees only their region)."],
+  live:["Show the refresh settings screen (Settings \u2192 Scheduled refresh) and point out where a gateway would be configured if the source were on-prem \u2014 tie back to the bank's on-prem system from Day 5. Then share a report with a test account and look at what the recipient sees."],
+  hw:{steps:["Write 2\u20133 sentences on what an on-prem source would need to keep refreshing daily.","Note who on their team should get viewer vs editor access, and why."], time:"~30 min"},
+  terms:[["Scheduled refresh","Automatically re-imports data on a set schedule"],["Gateway","A bridge letting the cloud Service reach an on-prem source"],["Row-level security","Restricts which rows different viewers see (name-drop only)"]],
+  summary:"Cloud sources usually refresh on their own; an on-prem source needs a gateway to let the cloud service reach it \u2014 and access should be scoped with viewer vs editor roles.",
+  check:["Why does an on-prem data source need a gateway but a cloud source usually doesn't?","What's the difference between viewer and editor access?","What happens to your report if the source data changes but refresh isn't set up?","Who on your team would you give editor access to, and why?"] },
+
+]},
+{ title:"Capstone (built incrementally)", days:[
+
+{ n:32, title:"Capstone Kickoff: Pick a Dataset & Import",
+  teach:["No new concept \u2014 the capstone starts applying the full pipeline (requirements \u2192 import \u2192 clean \u2192 model \u2192 visualize \u2192 publish) to a dataset they chose themselves."],
+  live:["Start with 2 minutes of Day 6-style requirements framing: what's the one question this dashboard should answer?","Help them pick a dataset \u2014 their own bank/UPI statement, a family budget, Swiggy order history, or IPL/cricket stats all work well.","Import it via Get Data.","Open Power Query and clean it together: fix data types, remove blank rows and duplicates, split any combined columns."],
+  hw:{steps:["Finish cleaning.","Start building table relationships if using more than one table \u2014 sketch which table is the fact table and which are dimensions."], time:"~40 min"},
+  terms:[],
+  summary:"No new concept \u2014 the capstone starts applying the full pipeline, from a clear question through to a clean, modeled dataset.",
+  check:["What's the one question you want this dashboard to answer?","What dataset did you choose, and why?","What's the first data quality issue you found when cleaning it?","What would be your fact table, and what would be the dimensions?"] },
+
+{ n:33, title:"Capstone: Model + First Visuals",
+  teach:["No new concept \u2014 applying Model view, star schema thinking, and core visuals to their own dataset."],
+  live:["Finalize relationships in Model view if using multiple tables, checking the fact/dimension split from Day 32.","Build the first 2\u20133 visuals that answer their main question."],
+  hw:{steps:["Add 2 more visuals + 1 slicer independently."], time:"~45 min"},
+  terms:[],
+  summary:"With relationships in place, visuals can now pull from multiple tables as if they were one \u2014 this is the model doing its job.",
+  check:["What relationship did you build, and which keys does it use?","Which visual best answers your main business question?","What's still missing from your model?","Did you run into any relationship errors, and how did you fix them?"] },
+
+{ n:34, title:"Capstone: DAX Measures & Interactivity",
+  teach:["No new concept \u2014 applying calculated columns, measures, and at least one interactivity feature (bookmark, drill-through, or tooltip) to their own dataset."],
+  live:["Add 2\u20133 measures relevant to their dataset \u2014 a plain total, a filtered total using CALCULATE, and a time-intelligence measure if the data has a good date column.","Add one interactivity feature from Day 27 \u2014 a bookmark or a simple drill-through page."],
+  hw:{steps:["Refine measures.","Apply Day 28's design practices."], time:"~40 min"},
+  terms:[],
+  summary:"Measures turn a static dashboard into something that answers real filtered questions, and a touch of interactivity makes it feel like a tool rather than a static picture.",
+  check:["What do your 2\u20133 measures calculate?","Which measure was hardest to get right, and why?","What interactivity feature did you add, and why that one?","Which measure do you think will be most useful to whoever views this dashboard?"] },
+
+{ n:35, title:"Capstone: Polish, Insights & Publish",
+  teach:["No new concept \u2014 applying dashboard design, insight-writing, and publishing to the capstone."],
+  live:["Apply design cleanup \u2014 color, layout, titles \u2014 then write 1\u20132 insights using the What/So what/Now what structure from Day 29, then publish to the Service."],
+  hw:{steps:["Prepare a 5-minute walkthrough of their dashboard as if presenting to their team, including their written insight(s)."], time:"~30 min"},
+  terms:[],
+  summary:"Polish and a written insight are what turn a working dashboard into a presentable one \u2014 the underlying data and logic don't change, but clarity and meaning do.",
+  check:["What design change made the biggest visual difference?","What's your dashboard's one-sentence insight?","What would you do differently if you started over?","What question do you expect someone might ask when you present this?"] },
+
+{ n:36, title:"Capstone Presentation",
+  teach:["No new concept \u2014 today is the demonstration that the full pipeline, from a stakeholder question to a published, storytelling dashboard, is now second nature."],
+  live:["They present their end-to-end dashboard (requirements \u2192 import \u2192 clean \u2192 model \u2192 DAX \u2192 insight \u2192 publish) as if presenting to their team; give feedback on the technical build, the design, and the clarity of the insight."],
+  hw:{steps:["None \u2014 this is the deliverable.","Identify their next learning step: advanced DAX, real company data access, or Databricks hands-on."], time:"\u2014"},
+  terms:[],
+  summary:"36 days ago this started with \u201cwhat is a data type\u201d \u2014 today's presentation is proof the full analyst pipeline, from a business question to a published insight, is now second nature.",
+  check:["Walk through your dashboard end-to-end, as if presenting to your team.","What was the hardest part of the whole program?","What do you want to learn next?","Which topic do you feel least confident about, and why?"] },
+
+]}
+];
+
+const STORAGE_KEY = "powerbi-tracker-progress-v7";
+let state = {};
+let openDays = new Set();
+
+function totalItems(){
+  let n = 0;
+  PLAN.forEach(w => n += w.days.length);
+  return n * 2;
+}
+function computeDone(){
+  let done = 0;
+  Object.values(state).forEach(d=>{ if(d.session) done++; if(d.homework) done++; });
+  return done;
+}
+function bulletList(items){ if(!items || !items.length) return ""; return `<ul class="bullets">${items.map(i=>`<li>${i}</li>`).join("")}</ul>`; }
+function stepList(items){ if(!items || !items.length) return ""; return `<ol class="steps">${items.map(i=>`<li>${i}</li>`).join("")}</ol>`; }
+function termChips(terms){ if(!terms || !terms.length) return ""; return `<div class="terms-row">${terms.map(t=>`<span class="term-chip"><b>${t[0]}:</b> ${t[1]}</span>`).join("")}</div>`; }
+
+function render(){
+  const container = document.getElementById("weeks");
+  container.innerHTML = "";
+  PLAN.forEach((week, wi)=>{
+    const weekDone = week.days.filter(d => state[d.n] && state[d.n].session && state[d.n].homework).length;
+    const el = document.createElement("div");
+    el.className = "week";
+    el.innerHTML = `
+      <div class="week-head" data-week="${wi}">
+        <span class="chev">&#9660;</span>
+        <span class="week-title">Week ${wi+1} &mdash; ${week.title}</span>
+        <span class="week-meta">${weekDone}/${week.days.length} days done</span>
+      </div>
+      <div class="days"></div>
+    `;
+    const daysEl = el.querySelector(".days");
+    week.days.forEach(d=>{
+      const s = state[d.n] || { session:false, homework:false };
+      const bothDone = s.session && s.homework;
+      const isOpen = openDays.has(d.n);
+      const dayEl = document.createElement("div");
+      dayEl.className = "day" + (isOpen ? " open" : "");
+      const hwHtml = stepList(d.hw.steps) + (d.hw.time && d.hw.time !== "\u2014" ? `<div class="hw-time">${d.hw.time}</div>` : "");
+      const questionsHtml = d.check.map(q => `<li>${q}</li>`).join("");
+      const newBadge = d.isNew ? `<span class="new-badge">NEW</span>` : "";
+      dayEl.innerHTML = `
+        <div class="day-row" data-day="${d.n}">
+          <div class="day-num">Day ${d.n}</div>
+          <div class="day-body">
+            <div class="day-title-row">
+              <p class="day-title ${bothDone ? 'done':''} ${d.isNew ? 'new-topic':''}">${d.title}${newBadge}</p>
+              <span class="day-chev">&#9660;</span>
+            </div>
+            <div class="checks">
+              <label class="chk session" onclick="event.stopPropagation()">
+                <input type="checkbox" data-day="${d.n}" data-field="session" ${s.session ? "checked":""}>
+                Session done
+              </label>
+              <label class="chk homework" onclick="event.stopPropagation()">
+                <input type="checkbox" data-day="${d.n}" data-field="homework" ${s.homework ? "checked":""}>
+                Homework done
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="day-detail">
+          ${d.visual ? `<div class="section visual-section">${d.visual}</div>` : ""}
+          <div class="section"><span class="section-label cover">Cover</span>${bulletList(d.teach)}</div>
+          <div class="section"><span class="section-label live">Live example</span>${stepList(d.live)}</div>
+          <div class="section"><span class="section-label hw">Homework</span>${hwHtml}</div>
+          ${d.terms && d.terms.length ? `<div class="section"><span class="section-label terms">Key terms</span>${termChips(d.terms)}</div>` : ""}
+          <hr class="divider">
+          <div class="section"><span class="section-label summary">End-of-class summary</span><span class="plain-text">${d.summary}</span></div>
+          <div class="section"><span class="section-label check">Check their understanding</span><ul class="check-list bullets">${questionsHtml}</ul></div>
+        </div>
+      `;
+      daysEl.appendChild(dayEl);
+    });
+    container.appendChild(el);
+  });
+
+  container.querySelectorAll("input[type=checkbox]").forEach(cb=>{ cb.addEventListener("change", onToggle); });
+  container.querySelectorAll(".week-head").forEach(h=>{ h.addEventListener("click", ()=>{ h.parentElement.classList.toggle("collapsed"); }); });
+  container.querySelectorAll(".day-row").forEach(row=>{
+    row.addEventListener("click", ()=>{
+      const n = parseInt(row.getAttribute("data-day"));
+      if(openDays.has(n)) openDays.delete(n); else openDays.add(n);
+      row.closest(".day").classList.toggle("open");
+    });
+  });
+  updateProgress();
+}
+
+function updateProgress(){
+  const total = totalItems();
+  const done = computeDone();
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById("progressNum").textContent = `${done} / ${total}`;
+  document.getElementById("progressLabel").textContent = `${pct}% complete`;
+  document.getElementById("barFill").style.width = pct + "%";
+}
+
+function onToggle(e){
+  const day = e.target.getAttribute("data-day");
+  const field = e.target.getAttribute("data-field");
+  if(!state[day]) state[day] = { session:false, homework:false };
+  state[day][field] = e.target.checked;
+  render();
+  save();
+}
+
+function save(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); flashSaved(); }
+  catch(err){ console.error("Save failed", err); }
+}
+function flashSaved(){
+  const note = document.getElementById("saveNote");
+  note.textContent = "Saved";
+  note.classList.add("show");
+  clearTimeout(flashSaved._t);
+  flashSaved._t = setTimeout(()=> note.classList.remove("show"), 1200);
+}
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){ state = JSON.parse(raw); }
+  }catch(err){ state = {}; }
+  render();
+}
+document.getElementById("reset").addEventListener("click", ()=>{
+  if(!confirm("Reset all progress? This can't be undone.")) return;
+  state = {};
+  render();
+  save();
+});
+
+load();
+</script>
+</body>
+</html>
